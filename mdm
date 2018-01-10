@@ -1,0 +1,5 @@
+# Options for MDM MetricsExtension
+# For details, check MetricsExtension -h
+
+MDM_ACCOUNT="SignalRShoeboxTest"
+MDM_OPTIONS="-LogLevel Info -Service -FrontEndUrl https://shoebox2.metrics.nsatc.net/ -MonitoringAccount \"${MDM_ACCOUNT}\" -CertFile /etc/mdm/cert.pem -PrivateKeyFile /etc/mdm/key.pem -SslDigest sha1"
