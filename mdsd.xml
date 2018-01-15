@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?>
+<MonitoringManagement version="1.0" namespace="SignalRShoeboxTest" eventVersion="1"
+                      timestamp="2018-01-01T00:00:00.000">
+ 
+    <Accounts>
+    <Account moniker="signalrshoeboxtestdiag" isDefault="true" />
+    <Account moniker="signalrshoeboxtestsecurity" alias="AzSecurityStore" />
+    <Account moniker="signalrshoeboxtestaudit" alias="AuditStore" />
+    </Accounts>
+ 
+  <Management eventVolume="Large" defaultRetentionInDays="90" >
+    <Identity>
+      <IdentityComponent name="Tenant">SignalRShoeboxTest</IdentityComponent>
+      <IdentityComponent name="Role">GetEnvironmentVariable("RESOURCEID")</IdentityComponent>
+      <IdentityComponent name="RoleInstance">GetEnvironmentVariable("INSTANCE")</IdentityComponent>
+    </Identity>
+    <AgentResourceUsage diskQuotaInMB="10000" />
+  </Management>
+
+  <Sources>
+    <Source name="MDM_Disk Read Bytes_Sec" dynamic_schema="true" />
+    <Source name="MDM_Disk Write Bytes_Sec" dynamic_schema="true" />
+    <Source name="MDM_Disk Read Operations_Sec" dynamic_schema="true" />
+    <Source name="MDM_Disk Write Operations_Sec" dynamic_schema="true" />
+  </Sources>
+ 
+  <Events>
+     <MdsdEvents>
+
+       <MdsdEventSource source="MDM_Disk Read Bytes_Sec">
+         <RouteEvent eventName="DiskReadBytesPerSec" storeType="CentralBond" priority="Normal" account="signalrshoeboxtestdiag" />
+       </MdsdEventSource>
+
+       <MdsdEventSource source="MDM_Disk Write Bytes_Sec">
+         <RouteEvent eventName="DiskWriteBytesPerSec" storeType="CentralBond" priority="Normal" account="signalrshoeboxtestdiag" />
+       </MdsdEventSource>
+
+       <MdsdEventSource source="MDM_Disk Read Operations_Sec">
+         <RouteEvent eventName="DiskReadOperationsPerSec" storeType="CentralBond" priority="Normal" account="signalrshoeboxtestdiag" />
+       </MdsdEventSource>
+
+       <MdsdEventSource source="MDM_Disk Write Operations_Sec">
+         <RouteEvent eventName="DiskWriteOperationsPerSec" storeType="CentralBond" priority="Normal" account="signalrshoeboxtestdiag" />
+       </MdsdEventSource>
+
+     </MdsdEvents>
+   </Events>
+</MonitoringManagement>

@@ -1,0 +1,13 @@
+# Options for mdsd
+# Check 'mdsd -h' for details.
+
+MDSD_ROLE_PREFIX=/var/run/mdsd/default
+MDSDLOG=/var/log
+MDSD_OPTIONS="-A -c /etc/mdsd.d/mdsd.xml -d -r ${MDSD_ROLE_PREFIX} -e ${MDSDLOG}/mdsd.err -w ${MDSDLOG}/mdsd.warn -o ${MDSDLOG}/mdsd.info"
+
+export MONITORING_GCS_ENVIRONMENT=DiagnosticsProd
+export MONITORING_GCS_ACCOUNT=SignalRShoeboxTest
+export MONITORING_GCS_REGION=eastus
+
+export MONITORING_GCS_CERT_CERTFILE=/etc/mdm/cert.pem
+export MONITORING_GCS_CERT_KEYFILE=/etc/mdm/key.pem
