@@ -3,7 +3,7 @@ FROM ubuntu:xenial
 RUN apt-get update && apt-get install -y collectd
 
 RUN apt-get update && apt-get install -y libunwind8 liblttng-ust0 libcurl3 libssl1.0.0 libuuid1 \
-    libkrb5-3 zlib1g libicu55 wget apt-transport-https apt-utils rsyslog
+    libkrb5-3 zlib1g libicu55 wget apt-transport-https apt-utils
 
 RUN repoPkg=azure-repoclient-https-noauth-public-xenial_1.0.2-47_amd64.deb && \
 	wget --no-check-certificate https://apt-mo.trafficmanager.net/repos/azurecore/pool/main/a/azure-repoclient-https-noauth-public-xenial/$repoPkg && \
@@ -48,6 +48,10 @@ COPY collect.py /opt/collector/collect.py
 COPY mdmstatsd.conf /etc/mdmstatsd/mdmstatsd.conf
 
 COPY publish /home/SignalR
+
+COPY 30-signalr.conf /etc/rsyslog.d/30-signalr.conf
+
+COPY 10-mdsd.conf /etc/rsyslog.d/10-mdsd.conf
 
 WORKDIR /home/SignalR
 

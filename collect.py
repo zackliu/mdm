@@ -15,6 +15,8 @@ NAMESPACE = 'SignalRShoeboxTest'
 metric = statsd.StatsClient()
 RESOURCEID = os.environ['RESOURCEID']
 INSTANCEID = open('/etc/hostname', 'r').read().strip()
+MESSAGE_THRESHOLD = 1000.0
+CONNECTION_THRESHOLD = 100.0
 # RESOURCEID = 'resourceid'
 # INSTANCEID = 'instanceid'
 
@@ -36,23 +38,60 @@ def sentMetric(namespace, metricName, resourceId, instanceId, value, **kw):
     # print metricString + str(value)
     logging.info(metricString + str(value))
     metric.gauge(metricString, value)
+
+def parseJson(metrics, endpoint):
+    result = dict()
+    if metrics:
+        for item in metrics[endpoint]:
+            result[item['HubName']] = {'ConnectionCount' : item['ConnectionCount'], 'MessageCount' : item['MessageCount']}
+    return result
+
  
+def smallerOrZero(oldVal, newVal):
+    oldVal = int(oldVal)
+    newVal = int(newVal)
+
+    if oldVal <= newVal:
+        return oldVal
+
+    return 0
 
 def signalr():
     while True:
         metrics = getMetrics()
-
-        if metrics != None:
-            for item in metrics['client']:
-                sentMetric(NAMESPACE, 'ClientCurrentConnection', RESOURCEID, INSTANCEID, item['ConnectionCount'], Hub=item['HubName'])
-                sentMetric(NAMESPACE, 'ClientMessageCount', RESOURCEID, INSTANCEID, item['MessageCount'], Hub=item['HubName'])
-            for item in metrics['server']:
-                sentMetric(NAMESPACE, 'ServerCurrentConnection', RESOURCEID, INSTANCEID, item['ConnectionCount'], Hub=item['HubName'])
-                sentMetric(NAMESPACE, 'ServerMessageCount', RESOURCEID, INSTANCEID, item['MessageCount'], Hub=item['HubName'])
-
+        clientStart = parseJson(metrics, 'client')
         time.sleep(COLLECT_INTERVAL)
-        
+        clientEnd = parseJson(metrics, 'client')
+        serverEnd = parseJson(metrics, 'server')
+        totalConnection = 0
+        totalMessage = 0
 
+
+        for key in clientEnd:
+            newConnectionCount = int(clientEnd[key]['ConnectionCount'])
+            newMessageCount = int(clientEnd[key]['MessageCount'])
+
+            sentMetric(NAMESPACE, "ConnectionCount", RESOURCEID, INSTANCEID, newConnectionCount, Hub=key, Endpoint='client')
+            totalConnection = totalConnection + newConnectionCount
+            sentMetric(NAMESPACE, "MessageCount", RESOURCEID, INSTANCEID, newMessageCount, Hub=key, Endpoint='client')
+            totalMessage = totalMessage + newMessageCount
+
+            oldConnectionCount = 0
+            oldMessageCount = 0
+            if key in clientStart:
+                oldConnectionCount = smallerOrZero(clientStart[key]['ConnectionCount'], newConnectionCount)
+                oldMessageCount = smallerOrZero(clientStart[key]['MessageCount'], newMessageCount)
+            sentMetric(NAMESPACE, "ConnectionCountPerSecond", RESOURCEID, INSTANCEID, getRate(oldConnectionCount, newConnectionCount, COLLECT_INTERVAL))
+            sentMetric(NAMESPACE, "MessageCountPerSecond", RESOURCEID, INSTANCEID, getRate(oldMessageCount, newMessageCount, COLLECT_INTERVAL))
+        
+        sentMetric(NAMESPACE, "ConnectionUsed", RESOURCEID, INSTANCEID, float(totalConnection) / CONNECTION_THRESHOLD)
+        sentMetric(NAMESPACE, "MessagUsed", RESOURCEID, INSTANCEID, float(totalMessage) / MESSAGE_THRESHOLD)
+
+        for key in serverEnd:
+            newConnectionCount = int(serverEnd[key]['ConnectionCount'])
+            newMessageCount = int(serverEnd[key]['MessageCount'])
+            sentMetric(NAMESPACE, "ConnectionCount", RESOURCEID, INSTANCEID, newConnectionCount, Hub=key, Endpoint='server')
+            sentMetric(NAMESPACE, "MessageCount", RESOURCEID, INSTANCEID, newMessageCount, Hub=key, Endpoint='server')
 
 def getRate(startVal, endVal, interval=1):
     return (endVal - startVal) / interval

@@ -11,17 +11,29 @@
   <Management eventVolume="Large" defaultRetentionInDays="90" >
     <Identity>
       <IdentityComponent name="Tenant">SignalRShoeboxTest</IdentityComponent>
-      <IdentityComponent name="Role">GetEnvironmentVariable("RESOURCEID")</IdentityComponent>
-      <IdentityComponent name="RoleInstance">GetEnvironmentVariable("INSTANCE")</IdentityComponent>
+      <IdentityComponent name="Role">RESOURCEID</IdentityComponent>
+      <IdentityComponent name="RoleInstance" useComputerName="true" />
     </Identity>
     <AgentResourceUsage diskQuotaInMB="10000" />
   </Management>
+
+  <Schemas>
+    <Schema name="signalr">
+      <Column name="Facility" type="str" mdstype="mt:wstr" />
+      <Column name="Severity" type="str" mdstype="mt:int32" />
+      <Column name="EventTime" type="str-rfc3339" mdstype="mt:utc" />
+      <Column name="SendingHost" type="str" mdstype="mt:wstr" />
+      <Column name="Msg" type="str" mdstype="mt:wstr" />
+      <Column name="SyslogTag" type="str" mdstype="mt:wstr" />
+    </Schema>
+  </Schemas>
 
   <Sources>
     <Source name="MDM_Disk Read Bytes_Sec" dynamic_schema="true" />
     <Source name="MDM_Disk Write Bytes_Sec" dynamic_schema="true" />
     <Source name="MDM_Disk Read Operations_Sec" dynamic_schema="true" />
     <Source name="MDM_Disk Write Operations_Sec" dynamic_schema="true" />
+    <Source name="local7" schema="signalr" />
   </Sources>
  
   <Events>
@@ -42,6 +54,11 @@
        <MdsdEventSource source="MDM_Disk Write Operations_Sec">
          <RouteEvent eventName="DiskWriteOperationsPerSec" storeType="CentralBond" priority="Normal" account="signalrshoeboxtestdiag" />
        </MdsdEventSource>
+
+       <MdsdEventSource source="local7">
+         <RouteEvent eventName="DefaultEventTable" storeType="CentralBond" priority="Normal" account="signalrshoeboxtestdiag" />
+       </MdsdEventSource>
+
 
      </MdsdEvents>
    </Events>
